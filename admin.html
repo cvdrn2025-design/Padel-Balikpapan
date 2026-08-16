@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Padel Balikpapan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-900 text-white p-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6 bg-zinc-800 p-4 rounded-xl border border-zinc-700">
+            <h1 class="text-xl font-bold text-emerald-400">Dashboard Admin - Padel Balikpapan</h1>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded text-sm font-semibold">Keluar</button>
+        </div>
+        <div class="bg-zinc-800 p-6 rounded-xl border border-zinc-700">
+            <p class="text-zinc-300">Selamat datang, Admin! Anda berhasil masuk ke area kontrol utama aplikasi.</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8pYn38FA1FRELUciMUr2bFX8XFCv0GBY",
+            authDomain: "padel-balikpapan.firebaseapp.com",
+            databaseURL: "https://padel-balikpapan-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "padel-balikpapan",
+            storageBucket: "padel-balikpapan.firebasestorage.app",
+            messagingSenderId: "832295578661",
+            appId: "1:832295578661:web:b76ff44f7818c78827a3cc"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                window.location.href = "index.html";
+            });
+        }
+    </script>
+</body>
+</html>
+
