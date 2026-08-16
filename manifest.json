@@ -5,11 +5,13 @@
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#059669",
+  "description": "Aplikasi Admin Padel Balikpapan",
   "icons": [
     {
-      "src": "https://via.placeholder.com/512",
+      "src": "https://raw.githubusercontent.com/cvdrn2025-design/Padel-Balikpapan/main/icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
