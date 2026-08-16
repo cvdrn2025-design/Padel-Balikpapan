@@ -1,0 +1,15 @@
+{
+  "name": "Padel Balikpapan POS",
+  "short_name": "Padel POS",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
