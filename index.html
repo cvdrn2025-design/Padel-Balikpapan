@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Padel Scoreboard & Admin Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #121212; color: #fff; padding: 20px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px; }
+    
+    .card { background: #1e1e1e; border-radius: 12px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+    h1, h2 { text-align: center; color: #00e676; text-transform: uppercase; margin-bottom: 15px; }
+    h2 { font-size: 16px; color: #ffeb3b; border-bottom: 1px solid #333; padding-bottom: 8px; margin-top: 20px; text-align: left; }
+    
+    /* Form & Grid Layout */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .form-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+    label { display: block; font-size: 12px; color: #aaa; text-transform: uppercase; font-weight: 600; }
+    input[type="text"], input[type="tel"], input[type="time"], input[type="number"], select { 
+      width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 14px; 
+    }
+    input:focus, select:focus { outline: none; border-color: #00e676; }
+    
+    /* Media Section */
+    .media-box { text-align: center; margin-top: 10px; background: #252525; padding: 10px; border-radius: 8px; }
+    video { width: 100%; max-width: 250px; border-radius: 8px; border: 2px solid #444; background: #000; margin-top: 5px; }
+    .preview-img { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; border: 2px solid #00e676; display: none; margin: 10px auto 0; }
+    .file-input-wrapper { margin-top: 8px; display: flex; justify-content: center; gap: 5px; align-items: center; font-size: 12px; }
+
+    /* F&B Section */
+    .fnb-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .btn-remove { background: #ff5252; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; }
+    .btn-add { background: #29b6f6; color: #000; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+
+    /* Summary Box */
+    .summary-box { background: #252525; border-radius: 8px; padding: 15px; margin-top: 20px; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #ddd; }
+    .summary-total { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #555; font-size: 18px; font-weight: bold; color: #00e676; }
+
+    /* Scoreboard Styles */
+    .team-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 10px; align-items: center; margin-bottom: 15px; background: #2a2a2a; padding: 12px; border-radius: 8px; }
+    .team-info { display: flex; align-items: center; gap: 10px; }
+    .team-name { font-size: 16px; font-weight: bold; }
+    .team-phone { font-size: 11px; color: #aaa; }
+    .stat-box { text-align: center; }
+    .stat-label { font-size: 10px; color: #aaa; text-transform: uppercase; display: block; }
+    .stat-value { font-size: 20px; font-weight: bold; color: #fff; }
+    .score-value { font-size: 28px; font-weight: bold; color: #00e676; }
+
+    /* Buttons */
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    button { background: #333; color: #fff; border: none; padding: 10px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #444; }
+    button.btn-primary { background: #00e676; color: #000; }
+    button.btn-primary:hover { background: #00c853; }
+    button.btn-danger { background: #ff5252; color: #fff; }
+    button.btn-secondary { background: #29b6f6; color: #000; }
+    button.btn-outline { background: transparent; border: 1px solid #666; color: #ccc; grid-column: span 2; margin-top: 5px; }
+    button.btn-outline:hover { background: #333; color: #fff; }
+
+    .match-meta { background: #252525; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; color: #ddd; margin-bottom: 15px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 8px; }
+    .status-bar { text-align: center; margin-top: 10px; font-size: 14px; font-weight: bold; color: #ffeb3b; min-height: 20px; }
+    .hidden { display: none !important; }
+
+    /* --- ANIMASI WINNER BANNER --- */
+    .winner-banner {
+      margin-top: 15px;
+      padding: 20px;
+      background: linear-gradient(135deg, #ffd700, #ff9800);
+      border-radius: 10px;
+      text-align: center;
+      color: #000;
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+      animation: popIn 0.5s ease-out forwards, pulseGlow 1.5s infinite alternate;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .winner-title {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.4);
+    }
+
+    .winner-name {
+      font-size: 22px;
+      font-weight: 800;
+      margin-top: 5px;
+      color: #121212;
+      background: #fff;
+      padding: 4px 15px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    .trophy-icon {
+      font-size: 40px;
+      margin-bottom: 5px;
+      animation: bounceTrophy 1s infinite alternate;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      80% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+      100% { box-shadow: 0 0 35px rgba(255, 215, 0, 0.9); }
+    }
+
+    @keyframes bounceTrophy {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-8px); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- MENU REGISTRASI & DASHBOARD ADMIN -->
+  <div id="registration-card" class="card">
+    <h1>Dashboard Admin & Pendaftaran</h1>
+    
+    <h2>1. Informasi Lapangan & Member</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Pilih Lapangan</label>
+        <select id="select-court" onchange="calculateTotal()">
+          <option value="150000" data-name="Lapangan 1">Lapangan 1 (Rp 150.000 / Jam)</option>
+          <option value="150000" data-name="Lapangan 2">Lapangan 2 (Rp 150.000 / Jam)</option>
+          <option value="200000" data-name="Lapangan VIP">Lapangan VIP (Rp 200.000 / Jam)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status Member</label>
+        <select id="select-member" onchange="calculateTotal()">
+          <option value="0">Non-Member (Tanpa Diskon)</option>
+          <option value="0.10">Member Silver (Diskon 10%)</option>
+          <option value="0.20">Member Gold (Diskon 20%)</option>
+        </select>
+      </div>
+    </div>
+
+    <h2>2. Waktu Permainan</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Jam Mulai</label>
+        <input type="time" id="input-time-start" value="14:00" onchange="calculateTotal()">
+      </div>
+      <div class="form-group">
+        <label>Jam Selesai</label>
+        <input type="time" id="input-time-end" value="16:00" onchange="calculateTotal()">
+      </div>
+    </div>
+
+    <!-- Data Tim A -->
+    <h2>3. Data Tim A</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nama Pemain / Tim A</label>
+        <input type="text" id="input-name-a" placeholder="Nama Tim A">
+      </div>
+      <div class="form-group">
+        <label>No. Telepon / WA (Tim A)</label>
+        <input type="tel" id="input-phone-a" placeholder="08xxxxxxxxxx">
+      </div>
+    </div>
+    <div class="media-box">
+      <button type="button" class="btn-secondary" onclick="startCamera('A')">Ambil Foto via Kamera</button>
+      <div class="file-input-wrapper">
+        <label style="margin:0;">atau Upload Galeri:</label>
+        <input type="file" id="file-a" accept="image/*" onchange="handleFileUpload(event, 'A')">
+      </div>
+      <video id="video-a" autoplay class="hidden"></video>
+      <button type="button" id="btn-snap-a" onclick="takeSnapshot('A')" class="btn-primary hidden" style="margin-top:8px;">Jepret Foto Tim A</button>
+      <img id="photo-a" class="preview-img" alt="Foto Tim A">
+    </div>
+
+    <!-- Data Tim B -->
+    <h2>4. Data Tim B</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nama Pemain / Tim B</label>
+        <input type="text" id="input-name-b" placeholder="Nama Tim B">
+      </div>
+      <div class="form-group">
+        <label>No. Telepon / WA (Tim B)</label>
+        <input type="tel" id="input-phone-b" placeholder="08xxxxxxxxxx">
+      </div>
+    </div>
+    <div class="media-box">
+      <button type="button" class="btn-secondary" onclick="startCamera('B')">Ambil Foto via Kamera</button>
+      <div class="file-input-wrapper">
+        <label style="margin:0;">atau Upload Galeri:</label>
+        <input type="file" id="file-b" accept="image/*" onchange="handleFileUpload(event, 'B')">
+      </div>
+      <video id="video-b" autoplay class="hidden"></video>
+      <button type="button" id="btn-snap-b" onclick="takeSnapshot('B')" class="btn-primary hidden" style="margin-top:8px;">Jepret Foto Tim B</button>
+      <img id="photo-b" class="preview-img" alt="Foto Tim B">
+    </div>
+
+    <!-- Additional Food & Beverage -->
+    <h2>5. Additional Food & Beverage</h2>
+    <div id="fnb-container"></div>
+    <button type="button" class="btn-add" onclick="addFnbRow()">+ Tambah F&B / Lainnya</button>
+
+    <!-- Ringkasan Transaksi Kasir -->
+    <div class="summary-box">
+      <div class="summary-row">
+        <span>Sewa Lapangan (<span id="duration-text">0</span> jam)</span>
+        <span id="court-cost-text">Rp 0</span>
+      </div>
+      <div class="summary-row">
+        <span>Total Food & Beverage</span>
+        <span id="fnb-cost-text">Rp 0</span>
+      </div>
+      <div class="summary-row">
+        <span>Diskon Member</span>
+        <span id="discount-text">- Rp 0</span>
+      </div>
+      <div class="summary-total">
+        <span>TOTAL HARGA</span>
+        <span id="grand-total-text">Rp 0</span>
+      </div>
+    </div>
+
+    <!-- Tombol dengan Proteksi Password Admin -->
+    <button class="btn-primary" style="width: 100%; margin-top: 20px; padding: 14px; font-size: 16px;" onclick="cekPasswordAdmin()">Simpan & Mulai Pertandingan</button>
+  </div>
+
+  <!-- BOARD SKOR -->
+  <div id="scoreboard-card" class="card hidden">
+    <h1>Padel Scoreboard</h1>
+    
+    <div class="match-meta">
+      <span><strong id="display-court">-</strong></span>
+      <span>Mulai: <strong id="display-time-start">-</strong></span>
+      <span>Selesai: <strong id="display-time-end">-</strong></span>
+    </div>
+
+    <!-- Tim A -->
+    <div class="team-row">
+      <div class="team-info">
+        <img id="board-img-a" src="" class="preview-img" style="display:inline-block; margin:0;">
+        <div>
+          <div id="display-name-a" class="team-name">Tim A</div>
+          <div id="display-phone-a" class="team-phone">-</div>
+        </div>
+      </div>
+      <div class="stat-box"><span class="stat-label">Set</span><span id="sets-a" class="stat-value">0</span></div>
+      <div class="stat-box"><span class="stat-label">Game</span><span id="games-a" class="stat-value">0</span></div>
+      <div class="stat-box"><span class="stat-label">Poin</span><span id="points-a" class="score-value">0</span></div>
+    </div>
+
+    <!-- Tim B -->
+    <div class="team-row">
+      <div class="team-info">
+        <img id="board-img-b" src="" class="preview-img" style="display:inline-block; margin:0;">
+        <div>
+          <div id="display-name-b" class="team-name">Tim B</div>
+          <div id="display-phone-b" class="team-phone">-</div>
+        </div>
+      </div>
+      <div class="stat-box"><span class="stat-label">Set</span><span id="sets-b" class="stat-value">0</span></div>
+      <div class="stat-box"><span class="stat-label">Game</span><span id="games-b" class="stat-value">0</span></div>
+      <div class="stat-box"><span class="stat-label">Poin</span><span id="points-b" class="score-value">0</span></div>
+    </div>
+
+    <div id="status" class="status-bar">Game Dimulai</div>
+
+    <div class="btn-group">
+      <button id="btn-point-a" class="btn-primary" onclick="addPoint('A')">+ Poin Tim A</button>
+      <button id="btn-point-b" class="btn-primary" onclick="addPoint('B')">+ Poin Tim B</button>
+      <button class="btn-danger" style="grid-column: span 2;" onclick="resetMatch()">Reset Score (0 - 0)</button>
+      <button class="btn-outline" onclick="backToAdmin()">← Kembali ke Dashboard Admin</button>
+    </div>
+
+    <!-- ANIMASI WINNER BANNER -->
+    <div id="winner-banner" class="winner-banner hidden">
+      <div class="trophy-icon">🏆</div>
+      <div class="winner-title">WINNER!</div>
+      <div id="winner-team-name" class="winner-name">NAMA TIM</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Canvas tersembunyi untuk proses snapshot kamera -->
+<canvas id="canvas" class="hidden"></canvas>
+
+<script>
+  let currentStream = null;
+  let photoData = { A: '', B: '' };
+  const defaultAvatar = 'https://via.placeholder.com/80/2a2a2a/ffffff?text=Padel';
+
+  // Daftar Menu F&B & Harga
+  const fnbMenu = [
+    { name: "Air Mineral 600ml", price: 5000 },
+    { name: "Isotonik / Pocari 500ml", price: 10000 },
+    { name: "Kopi Espresso / Americano", price: 18000 },
+    { name: "Club Sandwich", price: 25000 },
+    { name: "French Fries", price: 15000 },
+    { name: "Sewa Raket Padel Extra", price: 30000 }
+  ];
+
+  // FUNGSI CEK PASSWORD ADMIN
+  function cekPasswordAdmin() {
+    // Silakan ganti kata 'admin123' dengan password yang diinginkan Bapak
+    const password = prompt("Masukkan Password Admin:");
+    
+    if (password === "admin123") {
+      startMatch();
+    } else if (password !== null) {
+      alert("Password Salah! Akses ditolak.");
+    }
+  }
+
+  // 1. MANAJEMEN F&B & KALKULASI TOTAL
+  function addFnbRow() {
+    const container = document.getElementById('fnb-container');
+    const row = document.createElement('div');
+    row.className = 'fnb-row';
+
+    let optionsHtml = fnbMenu.map((item, index) => 
+      `<option value="${index}">${item.name} - Rp ${item.price.toLocaleString('id-ID')}</option>`
+    ).join('');
+
+    row.innerHTML = `
+      <select class="fnb-select" onchange="calculateTotal()">
+        ${optionsHtml}
+      </select>
+      <input type="number" class="fnb-qty" value="1" min="1" onchange="calculateTotal()">
+      <input type="text" class="fnb-subtotal" value="Rp 0" readonly>
+      <button type="button" class="btn-remove" onclick="removeFnbRow(this)">✕</button>
+    `;
+
+    container.appendChild(row);
+    calculateTotal();
+  }
+
+  function removeFnbRow(btn) {
+    btn.parentElement.remove();
+    calculateTotal();
+  }
+
+  function calculateTotal() {
+    const courtRate = parseFloat(document.getElementById('select-court').value);
+    const start = document.getElementById('input-time-start').value;
+    const end = document.getElementById('input-time-end').value;
+
+    let durationHours = 0;
+    if (start && end) {
+      const [startH, startM] = start.split(':').map(Number);
+      const [endH, endM] = end.split(':').map(Number);
+      
+      let diffMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+      if (diffMinutes < 0) diffMinutes += 24 * 60;
+      durationHours = diffMinutes / 60;
+    }
+
+    const courtCost = durationHours * courtRate;
+    document.getElementById('duration-text').innerText = durationHours.toFixed(1);
+    document.getElementById('court-cost-text').innerText = `Rp ${courtCost.toLocaleString('id-ID')}`;
+
+    let fnbTotal = 0;
+    const fnbRows = document.querySelectorAll('.fnb-row');
+    
+    fnbRows.forEach(row => {
+      const selectedIndex = row.querySelector('.fnb-select').value;
+      const qty = parseInt(row.querySelector('.fnb-qty').value) || 0;
+      const itemPrice = fnbMenu[selectedIndex].price;
+      const subtotal = itemPrice * qty;
+
+      row.querySelector('.fnb-subtotal').value = `Rp ${subtotal.toLocaleString('id-ID')}`;
+      fnbTotal += subtotal;
+    });
+
+    document.getElementById('fnb-cost-text').innerText = `Rp ${fnbTotal.toLocaleString('id-ID')}`;
+
+    const discountRate = parseFloat(document.getElementById('select-member').value);
+    const discountAmount = courtCost * discountRate;
+    document.getElementById('discount-text').innerText = `- Rp ${discountAmount.toLocaleString('id-ID')}`;
+
+    const grandTotal = (courtCost - discountAmount) + fnbTotal;
+    document.getElementById('grand-total-text').innerText = `Rp ${grandTotal.toLocaleString('id-ID')}`;
+  }
+
+  // 2. MANAJEMEN FOTO & KAMERA
+  async function startCamera(team) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Browser Anda memblokir akses kamera langsung. Silakan gunakan tombol 'Upload Galeri' di bawahnya.");
+      return;
+    }
+
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+    }
+
+    const teamKey = team.toLowerCase();
+    const video = document.getElementById(`video-${teamKey}`);
+    const btnSnap = document.getElementById(`btn-snap-${teamKey}`);
+    
+    try {
+      currentStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "user" }, 
+        audio: false 
+      });
+      video.srcObject = currentStream;
+      video.classList.remove('hidden');
+      btnSnap.classList.remove('hidden');
+    } catch (err) {
+      alert("Tidak dapat membuka kamera. Pastikan Anda memberikan izin akses kamera atau gunakan opsi Upload Galeri.");
+    }
+  }
+
+  function takeSnapshot(team) {
+    const teamKey = team.toLowerCase();
+    const video = document.getElementById(`video-${teamKey}`);
+    const canvas = document.getElementById('canvas');
+    const photo = document.getElementById(`photo-${teamKey}`);
+    
+    canvas.width = video.videoWidth || 300;
+    canvas.height = video.videoHeight || 300;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    photoData[team] = canvas.toDataURL('image/png');
+    photo.src = photoData[team];
+    photo.style.display = 'block';
+
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+    }
+    video.classList.add('hidden');
+    document.getElementById(`btn-snap-${teamKey}`).classList.add('hidden');
+  }
+
+  function handleFileUpload(event, team) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        photoData[team] = e.target.result;
+        const photo = document.getElementById(`photo-${team.toLowerCase()}`);
+        photo.src = photoData[team];
+        photo.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // 3. SKORBOARD LOGIC
+  const pointSequence = ["0", "15", "30", "40"];
+  let points = { A: 0, B: 0 };
+  let games = { A: 0, B: 0 };
+  let sets = { A: 0, B: 0 };
+  let isTiebreak = false;
+
+  function startMatch() {
+    const nameA = document.getElementById("input-name-a").value || "Tim A";
+    const phoneA = document.getElementById("input-phone-a").value || "-";
+    const nameB = document.getElementById("input-name-b").value || "Tim B";
+    const phoneB = document.getElementById("input-phone-b").value || "-";
+    
+    const courtSelect = document.getElementById("select-court");
+    const courtName = courtSelect.options[courtSelect.selectedIndex].getAttribute('data-name');
+    
+    const timeStart = document.getElementById("input-time-start").value || "-";
+    const timeEnd = document.getElementById("input-time-end").value || "-";
+
+    document.getElementById("display-name-a").innerText = nameA;
+    document.getElementById("display-phone-a").innerText = phoneA;
+    document.getElementById("display-name-b").innerText = nameB;
+    document.getElementById("display-phone-b").innerText = phoneB;
+    document.getElementById("display-court").innerText = courtName;
+    document.getElementById("display-time-start").innerText = timeStart;
+    document.getElementById("display-time-end").innerText = timeEnd;
+
+    document.getElementById("board-img-a").src = photoData.A || defaultAvatar;
+    document.getElementById("board-img-b").src = photoData.B || defaultAvatar;
+
+    document.getElementById("winner-banner").classList.add("hidden");
+    document.getElementById("btn-point-a").disabled = false;
+    document.getElementById("btn-point-b").disabled = false;
+
+    document.getElementById("registration-card").classList.add("hidden");
+    document.getElementById("scoreboard-card").classList.remove("hidden");
+  }
+
+  function updateUI() {
+    if (isTiebreak) {
+      document.getElementById("points-a").innerText = points.A;
+      document.getElementById("points-b").innerText = points.B;
+    } else {
+      document.getElementById("points-a").innerText = pointSequence[points.A] || "40";
+      document.getElementById("points-b").innerText = pointSequence[points.B] || "40";
+    }
+
+    document.getElementById("games-a").innerText = games.A;
+    document.getElementById("games-b").innerText = games.B;
+    document.getElementById("sets-a").innerText = sets.A;
+    document.getElementById("sets-b").innerText = sets.B;
+  }
+
+  function addPoint(team) {
+    const opponent = team === 'A' ? 'B' : 'A';
+
+    if (isTiebreak) {
+      points[team]++;
+      if (points[team] >= 7 && (points[team] - points[opponent] >= 2)) {
+        winGame(team);
+      }
+      updateUI();
+      return;
+    }
+
+    if (points.A === 3 && points.B === 3) {
+      winGame(team);
+      document.getElementById("status").innerText = `Golden Point dimenangkan oleh ${team}!`;
+      return;
+    }
+
+    if (points[team] < 3) {
+      points[team]++;
+    } else {
+      winGame(team);
+    }
+
+    updateUI();
+  }
+
+  function winGame(team) {
+    games[team]++;
+    points.A = 0;
+    points.B = 0;
+    document.getElementById("status").innerText = `Game untuk Tim ${team}`;
+
+    const opponent = team === 'A' ? 'B' : 'A';
+
+    if (games.A === 6 && games.B === 6) {
+      isTiebreak = true;
+      document.getElementById("status").innerText = "TIEBREAK!";
+      return;
+    }
+
+    if ((games[team] >= 6 && games[team] - games[opponent] >= 2) || (isTiebreak && games[team] === 7)) {
+      winSet(team);
+    }
+  }
+
+  function winSet(team) {
+    sets[team]++;
+    games.A = 0;
+    games.B = 0;
+    isTiebreak = false;
+    document.getElementById("status").innerText = `Set dimenangkan oleh Tim ${team}!`;
+
+    if (sets[team] === 2) {
+      const winnerName = document.getElementById(`display-name-${team.toLowerCase()}`).innerText;
+      
+      document.getElementById("status").innerText = `PERTANDINGAN SELESAI!`;
+      
+      const winnerBanner = document.getElementById("winner-banner");
+      document.getElementById("winner-team-name").innerText = winnerName;
+      winnerBanner.classList.remove("hidden");
+
+      document.getElementById("btn-point-a").disabled = true;
+      document.getElementById("btn-point-b").disabled = true;
+    }
+  }
+
+  function resetMatch() {
+    if (confirm("Reset skor pertandingan ke 0-0?")) {
+      points = { A: 0, B: 0 };
+      games = { A: 0, B: 0 };
+      sets = { A: 0, B: 0 };
+      isTiebreak = false;
+
+      document.getElementById("winner-banner").classList.add("hidden");
+      document.getElementById("status").innerText = "Game Dimulai";
+
+      document.getElementById("btn-point-a").disabled = false;
+      document.getElementById("btn-point-b").disabled = false;
+
+      updateUI();
+    }
+  }
+
+  function backToAdmin() {
+    if (confirm("Kembali ke Dashboard Admin? Data registrasi & transaksi akan disiapkan untuk sesi baru.")) {
+      points = { A: 0, B: 0 };
+      games = { A: 0, B: 0 };
+      sets = { A: 0, B: 0 };
+      isTiebreak = false;
+      photoData = { A: '', B: '' };
+
+      document.getElementById("photo-a").style.display = 'none';
+      document.getElementById("photo-b").style.display = 'none';
+      document.getElementById("file-a").value = "";
+      document.getElementById("file-b").value = "";
+
+      document.getElementById("winner-banner").classList.add("hidden");
+      document.getElementById("btn-point-a").disabled = false;
+      document.getElementById("btn-point-b").disabled = false;
+
+      document.getElementById("scoreboard-card").classList.add("hidden");
+      document.getElementById("registration-card").classList.remove("hidden");
+      updateUI();
+    }
+  }
+
+  window.onload = function() {
+    addFnbRow();
+  };
+</script>
+
+</body>
+</html>
+
